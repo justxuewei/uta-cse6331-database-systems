@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Student ID: 89800</p>
+<p>Name: Xuewei Niu</p>
+
+<div>
+    <label for="height">Height Range(e.g. 100-1000)</label><input type="text" id="height"/>
+    <button onclick="goButton()">Go!</button>
+</div>
+
+<a href="/">Go back to index</a><br/>
+<a href="/imginfo">Show images info</a><br/>
+<a href="/height_selector">Select images by height</a><br/>
+<a href="/edit_imginfo">Edit images info</a><br/>
+
+<script>
+    function goButton() {
+        let height = document.getElementById("height").value
+        window.location.href = "/imginfo?height_range=" + height
+    }
+</script>
+
+</html>
