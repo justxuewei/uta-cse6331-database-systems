@@ -71,8 +71,10 @@ def edit_imginfo():
         csvdata = csv.DictReader(csvfile)
         for row in csvdata:
             if row['Name'] == name:
-                row['Keywords'] = keywords
-                row['Picture'] = picture
+                if keywords is not None and keywords != "":
+                    row['Keywords'] = keywords
+                if picture is not None and picture != "":
+                    row['Picture'] = picture
             metadata.append(row)
 
     with open("static/data-1.csv", "w") as csvfile:
