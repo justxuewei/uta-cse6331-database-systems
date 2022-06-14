@@ -7,31 +7,32 @@
 <table border="1">
     <tr>
         <th>Name</th>
-        <th>Height</th>
-        <th>Author</th>
+        <th>Num</th>
         <th>Image (if existed)</th>
         <th>Keywords</th>
+        <th>Ops</th>
     </tr>
     {% for i in metadata %}
     <tr>
         <td>{{ i['Name'] }}</td>
-        <td>{{ i['Height'] }}</td>
-        <td>{{ i['Author'] }}</td>
+        <td>{{ i['Num'] }}</td>
         <td>
             {% if i['Picture'] != '' %}
-            <img height="100" alt="" src="/static/{{ i['Picture'] }}"/>
+            <img height="100" alt="" src="/static/{{i['Picture']}}"/>
             {% else %}
             No Image
             {% endif %}
         </td>
         <td>{{ i['Keywords'] }}</td>
+        <td><a href="/delete_imginfo?name={{i['Name']}}">Delete</a></td>
     </tr>
     {% endfor %}
 </table>
 
 <a href="/">Go back to index</a><br/>
 <a href="/imginfo">Show images info</a><br/>
-<a href="/height_selector">Select images by height</a><br/>
+<a href="/img_selectors">Select images</a><br/>
+<a href="/add_imginfo">Add images info</a><br/>
 <a href="/edit_imginfo">Edit images info</a><br/>
 
 </html>

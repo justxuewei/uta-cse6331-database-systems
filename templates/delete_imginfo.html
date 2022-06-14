@@ -5,19 +5,20 @@
 <p>Name: Xuewei Niu</p>
 
 <div>
-    <label for="height">Height Range(e.g. 100-1000)</label><input type="text" id="height"/>
+    <label for="name">Name of the item you want to delete</label><input type="text" id="name"/><br/>
     <button onclick="goButton()">Go!</button>
 </div>
 
 <a href="/">Go back to index</a><br/>
 <a href="/imginfo">Show images info</a><br/>
-<a href="/height_selector">Select images by height</a><br/>
+<a href="/img_selectors">Select images</a><br/>
+<a href="/add_imginfo">Add images info</a><br/>
 <a href="/edit_imginfo">Edit images info</a><br/>
 
 <script>
     function goButton() {
-        let height = document.getElementById("height").value
-        window.location.href = "/imginfo?height_range=" + height
+        let name = document.getElementById("name").value
+        window.location.href = "/delete_imginfo?name=" + name
     }
 </script>
 
