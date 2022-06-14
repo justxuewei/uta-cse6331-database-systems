@@ -10,14 +10,14 @@
 </div>
 
 <div>
-    <label for="num">Num Range(e.g. 100-200)</label><input type="text" id="num"/>
+    <label for="num">Salary Range(e.g. 100-200)</label><input type="text" id="num"/>
     <button onclick="numSelectorButton()">Go!</button>
 </div>
 
 <a href="/">Go back to index</a><br/>
 <a href="/imginfo">Show images info</a><br/>
 <a href="/img_selectors">Select images</a><br/>
-<a href="/add_imginfo">Add images info</a><br/>
+<!--<a href="/add_imginfo">Add images info</a><br/>-->
 <a href="/edit_imginfo">Edit images info</a><br/>
 
 <script>
@@ -28,7 +28,7 @@
 
     function numSelectorButton() {
          let num = document.getElementById("num").value
-        window.location.href = "/imginfo?num=" + num
+        window.location.href = "/imginfo?salary=" + num
     }
 </script>
 

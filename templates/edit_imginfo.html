@@ -6,7 +6,8 @@
 
 <div>
     <label for="name">Name</label><input type="text" id="name"/><br/>
-    <label for="picture">Picture</label><input type="text" id="picture"/><br/>
+    <label for="salary">Salary</label><input type="text" id="salary"/><br/>
+    <label for="picture">Picture (e.g. dave.jpg)</label><input type="text" id="picture"/><br/>
     <label for="keywords">Keywords</label><input type="text" id="keywords"/><br/>
     <button onclick="goButton()">Go!</button>
 </div>
@@ -14,15 +15,33 @@
 <a href="/">Go back to index</a><br/>
 <a href="/imginfo">Show images info</a><br/>
 <a href="/img_selectors">Select images</a><br/>
-<a href="/add_imginfo">Add images info</a><br/>
+<!--<a href="/add_imginfo">Add images info</a><br/>-->
 <a href="/edit_imginfo">Edit images info</a><br/>
 
 <script>
     function goButton() {
+        let queries = []
         let name = document.getElementById("name").value
+        if (name === "") {
+            alert("name is required")
+            return
+        }
+        queries.push("name=" + name)
         let picture = document.getElementById("picture").value
+        if (picture !== "") {
+            queries.push("picture="+picture)
+        }
+        let salary = document.getElementById("salary").value
+        if (salary !== "") {
+            queries.push("salary="+salary)
+        }
         let keywords = document.getElementById("keywords").value
-        window.location.href = "/edit_imginfo?name=" + name + "&keywords=" + keywords + "&picture=" + picture
+        if (keywords !== "") {
+            queries.push("keywords="+keywords)
+        }
+
+        console.log("/edit_imginfo?" + queries.join("&"))
+        window.location.href = "/edit_imginfo?" + queries.join("&")
     }
 </script>
 

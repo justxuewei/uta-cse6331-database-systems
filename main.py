@@ -5,6 +5,9 @@ from flask import Flask, render_template, request, redirect
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+csv_file = "static/people.csv"
+csv_headers = ['Name', 'State', 'Salary', 'Grade', 'Room', 'Telnum', 'Picture', 'Keywords']
+
 
 @app.route("/")
 def index():
@@ -13,35 +16,35 @@ def index():
 
 @app.route("/imginfo")
 def imginfo():
-    # num range
-    num_range = request.args.get("num")
-    num_low = None
-    num_high = None
-    if num_range is not None:
-        num_range_arr = num_range.split("-")
-        if len(num_range_arr) == 2:
+    # salary range
+    salary_range = request.args.get("salary")
+    salary_low = None
+    salary_high = None
+    if salary_range is not None:
+        salary_range_arr = salary_range.split("-")
+        if len(salary_range_arr) == 2:
             try:
-                num_low = int(num_range_arr[0])
-                num_high = int(num_range_arr[1])
+                salary_low = int(salary_range_arr[0])
+                salary_high = int(salary_range_arr[1])
             except ValueError:
-                print("invalid value, height range = {}".format(num_range))
+                print("invalid value, height range = {}".format(salary_range))
     # name
     name = request.args.get("name")
 
     metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
+    with open(csv_file, "r") as csvfile:
         csvdata = csv.DictReader(csvfile)
         for row in csvdata:
             metadata.append(row)
     filtered_metadata = []
 
     for i in metadata:
-        if num_low is not None and num_high is not None:
+        if salary_low is not None and salary_high is not None:
             try:
-                num_int = int(i['Num'])
+                salary_int = int(i['Salary'])
             except ValueError:
                 continue
-            if num_low <= num_int <= num_high:
+            if salary_low <= salary_int <= salary_high:
                 filtered_metadata.append(i)
             continue
         if name is not None and name != "":
@@ -63,11 +66,12 @@ def edit_imginfo():
     name = request.args.get("name")
     picture = request.args.get("picture")
     keywords = request.args.get("keywords")
+    salary = request.args.get("salary")
     if name is None:
         return render_template("edit_imginfo.html")
 
     metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
+    with open(csv_file, "r") as csvfile:
         csvdata = csv.DictReader(csvfile)
         for row in csvdata:
             if row['Name'] == name:
@@ -75,10 +79,13 @@ def edit_imginfo():
                     row['Keywords'] = keywords
                 if picture is not None and picture != "":
                     row['Picture'] = picture
+                if salary is not None and salary != "":
+                    row['Salary'] = salary
             metadata.append(row)
 
-    with open("static/data-1.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
+    with open(csv_file, "w") as csvfile:
+
+        writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
         writer.writeheader()
         for row in metadata:
             writer.writerow(row)
@@ -105,7 +112,7 @@ def add_imginfo():
             picture.save("static/{}".format(picture.name))
 
         metadata = []
-        with open("static/data-1.csv", "r") as csvfile:
+        with open(csv_file, "r") as csvfile:
             csvdata = csv.DictReader(csvfile)
             for row in csvdata:
                 if row['Name'] == name:
@@ -113,8 +120,8 @@ def add_imginfo():
                     row['Picture'] = picture
                 metadata.append(row)
 
-        with open("static/data-1.csv", "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
+        with open(csv_file, "w") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
             writer.writeheader()
             for row in metadata:
                 writer.writerow(row)
@@ -136,13 +143,13 @@ def delete_imginfo():
         return render_template("delete_imginfo.html")
 
     metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
+    with open(csv_file, "r") as csvfile:
         csvdata = csv.DictReader(csvfile)
         for row in csvdata:
             metadata.append(row)
 
-    with open("static/data-1.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
+    with open(csv_file, "w") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
         writer.writeheader()
         for row in metadata:
             if row['Name'] != name:
