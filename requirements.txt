@@ -1,1 +1,5 @@
-Flask
+flask
+pandas
+sqlalchemy
+mysqlclient
+PyMySQL
