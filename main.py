@@ -1,18 +1,17 @@
-import csv
-from unittest import result
 import pymysql
-from datetime import datetime
+import config
 
+from datetime import datetime
 from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
 db = pymysql.connect(
-    host="localhost",
-    user="root",
-    password="12345678",
-    database="cloudcomputing"
+    host=config.db_host,
+    user=config.db_user,
+    password=config.db_password,
+    database=config.db_database,
 )
 
 
