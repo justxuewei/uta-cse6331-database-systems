@@ -1,9 +1,19 @@
 import csv
+from unittest import result
+import pymysql
+from datetime import datetime
 
 from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+
+db = pymysql.connect(
+    host="localhost",
+    user="root",
+    password="12345678",
+    database="cloudcomputing"
+)
 
 
 @app.route("/")
@@ -11,145 +21,119 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/imginfo")
-def imginfo():
-    # num range
-    num_range = request.args.get("num")
-    num_low = None
-    num_high = None
-    if num_range is not None:
-        num_range_arr = num_range.split("-")
-        if len(num_range_arr) == 2:
-            try:
-                num_low = int(num_range_arr[0])
-                num_high = int(num_range_arr[1])
-            except ValueError:
-                print("invalid value, height range = {}".format(num_range))
-    # name
-    name = request.args.get("name")
+@app.route('/bounding_box')
+def bounding_box():
+    x1 = request.args.get("x1")
+    y1 = request.args.get("y1")
+    x2 = request.args.get("x2")
+    y2 = request.args.get("y2")
 
-    metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
-        csvdata = csv.DictReader(csvfile)
-        for row in csvdata:
-            metadata.append(row)
-    filtered_metadata = []
+    if x1 is None or y1 is None or x2 is None or y2 is None:
+        return render_template("bounding_box.html")
 
-    for i in metadata:
-        if num_low is not None and num_high is not None:
-            try:
-                num_int = int(i['Num'])
-            except ValueError:
-                continue
-            if num_low <= num_int <= num_high:
-                filtered_metadata.append(i)
-            continue
-        if name is not None and name != "":
-            if name == i['Name']:
-                filtered_metadata.append(i)
-            continue
-        filtered_metadata.append(i)
+    try:
+        x1 = float(x1)
+        y1 = float(y1)
+        x2 = float(x2)
+        y2 = float(y2)
+    except Exception as e:
+        return render_template("error.html", msg="value type is unsupported, err = {}".format(e))
 
-    return render_template("imginfo.html", metadata=filtered_metadata)
+    if x1 > x2 or y1 > y2:
+        return render_template("error.html", msg="x1, y1 should less than x2, y2, respectively")
+
+    cursor = db.cursor()
+    cursor.execute(
+        "SELECT * FROM earthquakes WHERE latitude >= {} AND longitude >= {} AND latitude <= {} AND longitude <= {}".format(x1, y1, x2, y2))
+    results = cursor.fetchall()
+    field_names = [i[0] for i in cursor.description]
+
+    data = []
+    for row in results:
+        row_data = {}
+        for i, field_name in enumerate(field_names):
+            row_data[field_name] = row[i]
+        data.append(row_data)
+
+    return render_template("result.html", data=data)
 
 
-@app.route("/img_selectors")
-def height_selector():
-    return render_template("img_selectors.html")
+@app.route("/largest_quakes")
+def largest_quakes():
+    net = request.args.get("net")
+    magnitude_range = request.args.get("magnitude_range")
+    if net is None or magnitude_range is None:
+        return render_template("largest_quakes.html")
+
+    low, high = get_range(magnitude_range)
+
+    cursor = db.cursor()
+    sql = "SELECT * FROM earthquakes WHERE mag >= {} AND mag <= {} AND net = '{}' ORDER BY mag LIMIT 5".format(
+        low, high, net)
+    print(sql)
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    field_names = [i[0] for i in cursor.description]
+
+    data = []
+    for row in results:
+        row_data = {}
+        for i, field_name in enumerate(field_names):
+            row_data[field_name] = row[i]
+        data.append(row_data)
+
+    return render_template("result.html", data=data)
 
 
-@app.route("/edit_imginfo")
-def edit_imginfo():
-    name = request.args.get("name")
-    picture = request.args.get("picture")
-    keywords = request.args.get("keywords")
-    if name is None:
-        return render_template("edit_imginfo.html")
+@app.route("/single_date")
+def single_date():
+    date = request.args.get("date")
+    time_range = request.args.get("time_range")
+    if date is None or time_range is None:
+        return render_template("single_date.html")
+    
+    low, high = get_range(time_range)
+    low = int(low)
+    high = int(high)
 
-    metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
-        csvdata = csv.DictReader(csvfile)
-        for row in csvdata:
-            if row['Name'] == name:
-                if keywords is not None and keywords != "":
-                    row['Keywords'] = keywords
-                if picture is not None and picture != "":
-                    row['Picture'] = picture
-            metadata.append(row)
+    started = datetime.strptime("{}T{}".format(date, low), "%Y-%m-%dT%H")
+    ended = datetime.strptime("{}T{}".format(date, high), "%Y-%m-%dT%H")
 
-    with open("static/data-1.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
-        writer.writeheader()
-        for row in metadata:
-            writer.writerow(row)
+    print(started)
+    print(ended)
 
-    return redirect("/imginfo", code=302)
-
-
-@app.route("/add_imginfo", methods=['GET', 'POST'])
-def add_imginfo():
-    if request.form is not None and request.form.get("name") is not None:
-        name = request.form.get("name")
-        num = request.form.get("num")
-        keywords = request.form.get("keywords")
-
-        picture = request.files.get("picture")
-
-        print(request.form)
-        print(request.files)
-        print(picture)
-        picture_name = None
-        if picture is not None:
-            print(picture.name)
-            picture_name = picture.name
-            picture.save("static/{}".format(picture.name))
-
-        metadata = []
-        with open("static/data-1.csv", "r") as csvfile:
-            csvdata = csv.DictReader(csvfile)
-            for row in csvdata:
-                if row['Name'] == name:
-                    row['Keywords'] = keywords
-                    row['Picture'] = picture
-                metadata.append(row)
-
-        with open("static/data-1.csv", "w") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
-            writer.writeheader()
-            for row in metadata:
-                writer.writerow(row)
-            writer.writerow({
-                'Name': name,
-                'Num': num,
-                'Picture': picture_name,
-                'Keywords': keywords
-            })
-        return redirect("/imginfo", code=302)
-
-    return render_template("add_imginfo.html")
+    cursor = db.cursor()
+    sql = "SELECT count(*), net FROM earthquakes WHERE time >= '{}' AND time <= '{}' GROUP BY net ORDER BY  net limit 1;".format(
+        started, ended)
+    print(sql)
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    print(result)
+    
+    return render_template("single_date_result.html", count=result[0], net=result[1])
 
 
-@app.route("/delete_imginfo")
-def delete_imginfo():
-    name = request.args.get("name")
-    if name is None:
-        return render_template("delete_imginfo.html")
+def get_range(range_str):
+    arr = range_str.split('-')
+    if len(arr) != 2:
+        return 0, 0
+    return float(arr[0]), float(arr[1])
 
-    metadata = []
-    with open("static/data-1.csv", "r") as csvfile:
-        csvdata = csv.DictReader(csvfile)
-        for row in csvdata:
-            metadata.append(row)
 
-    with open("static/data-1.csv", "w") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['Name', 'Num', 'Picture', 'Keywords'])
-        writer.writeheader()
-        for row in metadata:
-            if row['Name'] != name:
-                writer.writerow(row)
+@app.route("/replace_nn")
+def replace_nn():
+    nn = request.args.get("nn")
+    rnn = request.args.get("rnn")
+    if nn is None or rnn is None:
+        return render_template("replace_nn.html")
+    
+    cursor = db.cursor()
+    sql = "UPDATE earthquakes SET net = '{}' WHERE net = '{}'".format(rnn, nn)
+    print(sql)
+    rows = cursor.execute(sql)
+    db.commit()
 
-    return redirect("/imginfo", code=302)
-
+    return render_template("error.html", msg="successfully update, affected rows = {}".format(rows))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

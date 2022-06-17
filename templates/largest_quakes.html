@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Student ID: 89800</p>
+<p>Name: Xuewei Niu</p>
+
+<div>
+    <label for="net">net</label><input type="text" id="net"/><br/>
+    <label for="magnitude_range">mag range (e.g. 10-200)</label><input type="text" id="magnitude_range"/><br/>
+    <button onclick="goButton()">Go!</button>
+</div>
+
+<script>
+    function goButton() {
+        let net = document.getElementById("net").value
+        let magnitude_range = document.getElementById("magnitude_range").value
+        window.location.href = "/largest_quakes?net=" + net + "&magnitude_range=" + magnitude_range
+    }
+</script>
+
+<a href="/">Go index</a><br/>
+<a href="/bounding_box">Bounding box</a><br/>
+<a href="/largest_quakes">Largest quakes</a><br/>
+<a href="/single_date">Single date</a><br/>
+<a href="/replace_nn">Replace nn</a><br/>
+
+</html>

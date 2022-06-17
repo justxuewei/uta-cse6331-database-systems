@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Student ID: 89800</p>
+<p>Name: Xuewei Niu</p>
+
+<div>
+    <label for="date">date (e.g. 2020-04-12)</label><input type="text" id="date"/><br/>
+    <label for="time_range">time range (e.g. 10-20)</label><input type="text" id="time_range"/><br/>
+    <button onclick="goButton()">Go!</button>
+</div>
+
+<a href="/">Go index</a><br/>
+<a href="/bounding_box">Bounding box</a><br/>
+<a href="/largest_quakes">Largest quakes</a><br/>
+<a href="/single_date">Single date</a><br/>
+<a href="/replace_nn">Replace nn</a><br/>
+
+<script>
+    function goButton() {
+        let date = document.getElementById("date").value
+        let time_range = document.getElementById("time_range").value
+        window.location.href = "/single_date?time_range=" + time_range + "&date=" + date
+    }
+</script>
+
+</html>
