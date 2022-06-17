@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Student ID: 89800</p>
+<p>Name: Xuewei Niu</p>
+
+<div>
+    <h3>Task 1</h3>
+    <p>Search for and count all earthquakes that occurred with a magnitude greater than 5.0</p>
+    <button onclick="search1()">Search!</button>
+</div>
+
+<div>
+    <h3>Task 2</h3>
+    <p>Search for 2.0 to 2.5, 2.5 to 3.0, etc magnitude quakes for a one week, a range of days or the whole 30 days.</p>
+    mag range (e.g. 2.0-2.5) <input type="text" id="mag_range" /><br />
+    started date (e.g. 2022-06-05) <input type="text" id="started_date" /><br />
+    ended date (e.g. 2022-06-05) <input type="text" id="ended_date" /><br />
+    <button onclick="search2()">Query!</button>
+</div>
+
+<div>
+    <h3>Task 3</h3>
+    <p>Find earthquakes that were near (20 km, 50 km?) of a specified location.</p>
+    your latitude <input type="text" id="latitude" /><br />
+    your longitude <input type="text" id="longitude" /><br />
+    distance(km) <input type="text" id="distance" /><br />
+    <button onclick="search3()">Query!</button>
+</div>
+
+<div>
+    <h3>Nav</h3>
+    <a href="/">Go index</a><br />
+</div>
+
+<script>
+    function search1() {
+        window.location.href = "/mag_greater_than_5"
+    }
+
+    function search2() {
+        let mag_range = document.getElementById("mag_range").value
+        let started_date = document.getElementById("started_date").value
+        let ended_date = document.getElementById("ended_date").value
+
+        window.location.href = "/mags?mag_range=" + mag_range + "&started_date=" + started_date + "&ended_date=" + ended_date
+    }
+
+    function search3() {
+        let latitude = document.getElementById("latitude").value
+        let longitude = document.getElementById("longitude").value
+        let distance = document.getElementById("distance").value
+
+        window.location.href = "/near?latitude=" + latitude + "&longitude=" + longitude + "&distance=" + distance
+    }
+</script>
+
+</html>
