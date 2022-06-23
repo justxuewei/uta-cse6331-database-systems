@@ -1,9 +1,10 @@
-import csv
-from unittest import result
+import json
+import random
+import time
+import redis
 import pymysql
-from datetime import datetime
 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -15,125 +16,148 @@ db = pymysql.connect(
     database="cloudcomputing"
 )
 
+redis_ins = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+
+def cache_key(task_name, *params):
+    param_strs = []
+    for param in param_strs:
+        param_strs.append(str(param))
+    params_key = "-".join(param_strs)
+    return "{}-{}".format(task_name, params_key)
+
+
+def get_range(range_str):
+    arr = range_str.split('-')
+    print(arr)
+    if len(arr) != 2:
+        raise ValueError("Invalid range format, for example, the valid format is `10-200`.")
+    try:
+        low, high = float(arr[0]), float(arr[1])
+    except Exception as e:
+        raise e
+    if low > high:
+        raise ValueError("low is greater than high")
+    return low, high
+
+
+def select_all(sql):
+    cursor = db.cursor()
+    print(sql)
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    field_names = [i[0] for i in cursor.description]
+    data = []
+    for row in results:
+        row_data = {}
+        for i, field_name in enumerate(field_names):
+            row_data[field_name] = row[i]
+        data.append(row_data)
+    return data
+
+
+def select_one(sql):
+    cursor = db.cursor()
+    print(sql)
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    data = {}
+    field_names = [i[0] for i in cursor.description]
+    for i, field_name in enumerate(field_names):
+        data[field_name] = result[i]
+    return data
+
+
+def message_page(msg):
+    return render_template("message.html", msg=msg)
+
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-@app.route('/bounding_box')
-def bounding_box():
-    x1 = request.args.get("x1")
-    y1 = request.args.get("y1")
-    x2 = request.args.get("x2")
-    y2 = request.args.get("y2")
+@app.route("/queries")
+def queries():
+    return render_template("queryies.html")
 
-    if x1 is None or y1 is None or x2 is None or y2 is None:
-        return render_template("bounding_box.html")
 
+@app.route("/task10")
+def task10():
+    start = time.time()
+    elev_range = request.args.get("elev_range")
+    number_range = request.args.get("number_range")
+    if elev_range is None or number_range is None:
+        return message_page("elev_range and number_range are required")
     try:
-        x1 = float(x1)
-        y1 = float(y1)
-        x2 = float(x2)
-        y2 = float(y2)
+        elev_low, elev_high = get_range(elev_range)
+        number_low, number_high = get_range(number_range)
+        elev_low, elev_high = int(elev_low), int(elev_high)
+        number_low, number_high = int(number_low), int(number_high)
     except Exception as e:
-        return render_template("error.html", msg="value type is unsupported, err = {}".format(e))
+        return message_page("failed to parse range, err = {}".format(e))
 
-    if x1 > x2 or y1 > y2:
-        return render_template("error.html", msg="x1, y1 should less than x2, y2, respectively")
+    if redis_ins.exists(cache_key('task10', elev_range, number_range)):
+        data = json.loads(redis_ins.get(cache_key('task10', elev_range, number_range)).decode())
+        print('cached data = {}'.format(data))
+    else:
+        sql = "SELECT * FROM v WHERE elev >= {}  AND elev <= {} AND number >= {} AND number <= {}".format(elev_low,
+                                                                                                          elev_high,
+                                                                                                          number_low,
+                                                                                                          number_high)
+        data = select_all(sql)
+        redis_ins.set(cache_key('task10', elev_range, number_range), json.dumps(data))
+        redis_ins.expire(cache_key('task10', elev_range, number_range), 5)
+        redis_ins.incr('task10')
 
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT * FROM earthquakes WHERE latitude >= {} AND longitude >= {} AND latitude <= {} AND longitude <= {}".format(x1, y1, x2, y2))
-    results = cursor.fetchall()
-    field_names = [i[0] for i in cursor.description]
-
-    data = []
-    for row in results:
-        row_data = {}
-        for i, field_name in enumerate(field_names):
-            row_data[field_name] = row[i]
-        data.append(row_data)
-
-    return render_template("result.html", data=data)
-
-
-@app.route("/largest_quakes")
-def largest_quakes():
-    net = request.args.get("net")
-    magnitude_range = request.args.get("magnitude_range")
-    if net is None or magnitude_range is None:
-        return render_template("largest_quakes.html")
-
-    low, high = get_range(magnitude_range)
-
-    cursor = db.cursor()
-    sql = "SELECT * FROM earthquakes WHERE mag >= {} AND mag <= {} AND net = '{}' ORDER BY mag LIMIT 5".format(
-        low, high, net)
-    print(sql)
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    field_names = [i[0] for i in cursor.description]
-
-    data = []
-    for row in results:
-        row_data = {}
-        for i, field_name in enumerate(field_names):
-            row_data[field_name] = row[i]
-        data.append(row_data)
-
-    return render_template("result.html", data=data)
+    if len(data) == 0:
+        msg = "No data"
+    else:
+        largest_elev, least_elev = data[0]['elev'], data[0]['elev']
+        for row in data:
+            if least_elev > row['elev']:
+                least_elev = row['elev']
+            if largest_elev < row['elev']:
+                largest_elev = row['elev']
+        msg = "maximum elev = {}, minimum elev = {}".format(largest_elev, least_elev)
+    times = redis_ins.get('task10')
+    msg = "{}, query times = {}, elapsed time = {}".format(msg, int(times), time.time() - start)
+    return render_template("results.html", data=data, msg=msg)
 
 
-@app.route("/single_date")
-def single_date():
-    date = request.args.get("date")
-    time_range = request.args.get("time_range")
-    if date is None or time_range is None:
-        return render_template("single_date.html")
-    
-    low, high = get_range(time_range)
-    low = int(low)
-    high = int(high)
+@app.route("/task11")
+def task11():
+    start = time.time()
+    seq_range = request.args.get("seq_range")
+    n = request.args.get("n")
+    if seq_range is None or n is None:
+        return message_page("seq_range and n are required")
+    try:
+        seq_low, seq_high = get_range(seq_range)
+        seq_low, seq_high = int(seq_low), int(seq_high)
+        n = int(n)
+    except Exception as e:
+        return message_page("failed to parse range, err = {}".format(e))
 
-    started = datetime.strptime("{}T{}".format(date, low), "%Y-%m-%dT%H")
-    ended = datetime.strptime("{}T{}".format(date, high), "%Y-%m-%dT%H")
+    if redis_ins.exists(cache_key('task11', seq_range)):
+        data = json.loads(redis_ins.get(cache_key('task11', seq_range)).decode())
+        print('cached data = {}'.format(data))
+    else:
+        sql = """select v.number as number, volcano_name, country, region, longitude, latitude, elev
+    from (select number from vindex where sequence >= {} and sequence <= {}) as vindex
+             left join v on v.number = vindex.number;""".format(seq_low, seq_high)
+        data = select_all(sql)
+        redis_ins.set(cache_key('task11', seq_range), json.dumps(data))
+        redis_ins.expire(cache_key('task11', seq_range), 5)
+        redis_ins.incr('task11')
+    if len(data) >= n:
+        sampled = random.sample(data, n)
+    else:
+        sampled = data
 
-    print(started)
-    print(ended)
+    msg = "query times = {}, elapsed time = {}".format(int(redis_ins.get('task11')), time.time() - start)
+    return render_template("results.html", data=sampled, msg=msg)
 
-    cursor = db.cursor()
-    sql = "SELECT count(*), net FROM earthquakes WHERE time >= '{}' AND time <= '{}' GROUP BY net ORDER BY  net limit 1;".format(
-        started, ended)
-    print(sql)
-    cursor.execute(sql)
-    result = cursor.fetchone()
-    print(result)
-    
-    return render_template("single_date_result.html", count=result[0], net=result[1])
-
-
-def get_range(range_str):
-    arr = range_str.split('-')
-    if len(arr) != 2:
-        return 0, 0
-    return float(arr[0]), float(arr[1])
-
-
-@app.route("/replace_nn")
-def replace_nn():
-    nn = request.args.get("nn")
-    rnn = request.args.get("rnn")
-    if nn is None or rnn is None:
-        return render_template("replace_nn.html")
-    
-    cursor = db.cursor()
-    sql = "UPDATE earthquakes SET net = '{}' WHERE net = '{}'".format(rnn, nn)
-    print(sql)
-    rows = cursor.execute(sql)
-    db.commit()
-
-    return render_template("error.html", msg="successfully update, affected rows = {}".format(rows))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
