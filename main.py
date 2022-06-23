@@ -150,7 +150,10 @@ def task11():
         redis_ins.set(cache_key('task11', seq_range), json.dumps(data))
         redis_ins.expire(cache_key('task11', seq_range), 5)
         redis_ins.incr('task11')
-    sampled = random.sample(data, n)
+    if len(data) >= n:
+        sampled = random.sample(data, n)
+    else:
+        sampled = data
 
     msg = "query times = {}, elapsed time = {}".format(int(redis_ins.get('task11')), time.time() - start)
     return render_template("results.html", data=sampled, msg=msg)
