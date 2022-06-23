@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<p>Student ID: 89800</p>
+<p>Name: Xuewei Niu</p>
+
+{% if msg %}
+<p>{{ msg }}</p>
+{% endif %}
+
+<table border="1">
+    <tr>
+        <th>Number</th>
+        <th>Volcano Name</th>
+        <th>Country</th>
+        <th>Region</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Elev</th>
+    </tr>
+    {% for i in data %}
+    <tr>
+        <td>{{ i['number'] }}</td>
+        <td>{{ i['volcano_name'] }}</td>
+        <td>{{ i['country'] }}</td>
+        <td>{{ i['region'] }}</td>
+        <td>{{ i['latitude'] }}</td>
+        <td>{{ i['longitude'] }}</td>
+        <td>{{ i['elev'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</html>
