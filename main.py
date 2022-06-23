@@ -121,7 +121,7 @@ def task10():
                 largest_elev = row['elev']
         msg = "maximum elev = {}, minimum elev = {}".format(largest_elev, least_elev)
     times = redis_ins.get('task10')
-    msg = "{}, query times = {}, elapsed time = {}".format(msg, times, time.time() - start)
+    msg = "{}, query times = {}, elapsed time = {}".format(msg, int(times), time.time() - start)
     return render_template("results.html", data=data, msg=msg)
 
 
@@ -139,14 +139,20 @@ def task11():
     except Exception as e:
         return message_page("failed to parse range, err = {}".format(e))
 
-    sql = """select v.number as number, volcano_name, country, region, longitude, latitude, elev
-from (select number from vindex where sequence >= {} and sequence <= {}) as vindex
-         left join v on v.number = vindex.number;""".format(seq_low, seq_high)
-    data = select_all(sql)
+    if redis_ins.exists(cache_key('task11', seq_range)):
+        data = json.loads(redis_ins.get(cache_key('task11', seq_range)).decode())
+        print('cached data = {}'.format(data))
+    else:
+        sql = """select v.number as number, volcano_name, country, region, longitude, latitude, elev
+    from (select number from vindex where sequence >= {} and sequence <= {}) as vindex
+             left join v on v.number = vindex.number;""".format(seq_low, seq_high)
+        data = select_all(sql)
+        redis_ins.set(cache_key('task11', seq_range), json.dumps(data))
+        redis_ins.expire(cache_key('task11', seq_range), 5)
+        redis_ins.incr('task11')
     sampled = random.sample(data, n)
 
-    times = redis_ins.incr('task11')
-    msg = "query times = {}, elapsed time = {}".format(times, time.time() - start)
+    msg = "query times = {}, elapsed time = {}".format(int(redis_ins.get('task11')), time.time() - start)
     return render_template("results.html", data=sampled, msg=msg)
 
 
