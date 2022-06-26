@@ -98,8 +98,8 @@ def message_page(msg):
     return render_template("message.html", msg=msg)
 
 
-def results_page(data, msg):
-    return render_template("results.html", data=data, msg=msg)
+def results_page(data, msg, **kwargs):
+    return render_template("results.html", data=data, msg=msg, attachment=kwargs)
 
 
 @app.route("/")

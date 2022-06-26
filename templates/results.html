@@ -4,41 +4,138 @@
 <p>Student ID: 89800</p>
 <p>Name: Xuewei Niu</p>
 
-{% if msg %}
-<p>{{ msg }}</p>
-{% endif %}
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"
+        integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
 
-<table border="1">
-    <tr>
-        <th>latitude</th>
-        <th>longitude</th>
-        <th>depth</th>
-        <th>mag</th>
-        <th>mag_type</th>
-        <th>time</th>
-        <th>net</th>
-        <th>id</th>
-        <th>place</th>
-        <th>horizontal_error</th>
-        <th>mag_nst</th>
-        <th>location_source</th>
-    </tr>
-    {% for i in data %}
-    <tr>
-        <td>{{ i['latitude'] }}</td>
-        <td>{{ i['longitude'] }}</td>
-        <td>{{ i['depth'] }}</td>
-        <td>{{ i['mag'] }}</td>
-        <td>{{ i['mag_type'] }}</td>
-        <td>{{ i['time'] }}</td>
-        <td>{{ i['net'] }}</td>
-        <td>{{ i['string_id'] }}</td>
-        <td>{{ i['place'] }}</td>
-        <td>{{ i['horizontal_error'] }}</td>
-        <td>{{ i['mag_nst'] }}</td>
-        <td>{{ i['location_source'] }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<body>
+    {% if msg %}
+    <p>{{ msg }}</p>
+    {% endif %}
+
+    <table border="1">
+        <tr>
+            <th>latitude</th>
+            <th>longitude</th>
+            <th>depth</th>
+            <th>mag</th>
+            <th>mag_type</th>
+            <th>time</th>
+            <th>net</th>
+            <th>id</th>
+            <th>place</th>
+            <th>horizontal_error</th>
+            <th>mag_nst</th>
+            <th>location_source</th>
+        </tr>
+        {% for i in data %}
+        <tr>
+            <td>{{ i['latitude'] }}</td>
+            <td>{{ i['longitude'] }}</td>
+            <td>{{ i['depth'] }}</td>
+            <td>{{ i['mag'] }}</td>
+            <td>{{ i['mag_type'] }}</td>
+            <td>{{ i['time'] }}</td>
+            <td>{{ i['net'] }}</td>
+            <td>{{ i['string_id'] }}</td>
+            <td>{{ i['place'] }}</td>
+            <td>{{ i['horizontal_error'] }}</td>
+            <td>{{ i['mag_nst'] }}</td>
+            <td>{{ i['location_source'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div style="width: 50%; margin: auto">
+        <p>BAR CHART</p>
+        <canvas id="mag_chart"></canvas>
+    </div>
+
+    <div style="width: 30%; margin: auto">
+        <p>PIE CHART</p>
+        <canvas id="mag_pie_chart"></canvas>
+    </div>
+
+    <script>
+        let data = []
+        {% for i in data %}
+        data.push({
+            mag: {{ i['mag'] }},
+        });
+        {% endfor %}
+
+        let mag_dataset = [0, 0, 0, 0, 0];
+        for (let i = 0; i < data.length; i++) {
+            let mag = data[i]['mag'];
+            if (mag <= 1) {
+                mag_dataset[0]++;
+            } else if (mag <= 2) {
+                mag_dataset[1]++;
+            } else if (mag <= 3) {
+                mag_dataset[2]++;
+            } else if (mag <= 4) {
+                mag_dataset[3]++;
+            } else {
+                mag_dataset[4]++;
+            }
+        }
+
+        let mag_chart_ctx = document.getElementById('mag_chart').getContext('2d');
+        let mag_chart = new Chart(mag_chart_ctx, {
+            type: 'bar',
+            data: {
+                labels: ["0-1", "1-2", "2-3", "3-4", "4-5"],
+                datasets: [{
+                    label: 'Magnitude',
+                    data: mag_dataset,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        let mag_pie_chart_ctx = document.getElementById('mag_pie_chart').getContext('2d');
+        let mag_pie_chart = new Chart(mag_pie_chart_ctx, {
+            type: 'pie',
+            data: {
+                labels: ["0-1", "1-2", "2-3", "3-4", "4-5"],
+                datasets: [{
+                    label: 'Magnitude',
+                    data: mag_dataset,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
 
 </html>
