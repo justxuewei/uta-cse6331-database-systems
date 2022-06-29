@@ -16,7 +16,6 @@
     <p>Task 2</p>
     <p>The format of names is "fruit1,fruit2".</p>
     N <input type="text" id="task_2_n" /><br />
-    Names <input type="text" id="task_2_names" /><br />
     <button onclick="task2()">Go!</button>
 </div>
 
@@ -42,8 +41,7 @@
 
     function task2() {
         let n = document.getElementById("task_2_n").value;
-        let names = document.getElementById("task_2_names").value;
-        window.location.href = "/task2?n=" + n + "&names=" + names
+        window.location.href = "/task2?n=" + n
     }
 
     function task3() {

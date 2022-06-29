@@ -146,22 +146,10 @@ def task2():
         n = int(n)
     except Exception as e:
         return message_page("n should be a number")
-    names = request.args.get("names")
-    if not n or not names:
+    if not n:
         return message_page("n and names are required")
-    print(n, names)
-    names_arr = names.split(",")
-    print(names_arr)
-    if len(names_arr) != n:
-        return message_page("the length of names is not equals to n")
-    data = []
-    for name in names_arr:
-        sql = "select count(*) as cnt from quiz4 where col_4 = '{}'".format(name)
-        sql_data = select_one(sql)
-        data.append({
-            'fruit': name,
-            'cnt': sql_data['cnt']
-        })
+    sql = "select count(0) as cnt, col_4 as fruit from quiz4 group by col_4 order by cnt desc limit {}".format(n)
+    data = select_all(sql)  
     print(data)
     return results_page(data, None, task_name='task_2')
 
