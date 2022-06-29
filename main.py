@@ -98,8 +98,8 @@ def message_page(msg):
     return render_template("message.html", msg=msg)
 
 
-def results_page(data, msg):
-    return render_template("results.html", data=data, msg=msg)
+def results_page(data, msg, **kwargs):
+    return render_template("results.html", data=data, msg=msg, attachment=kwargs)
 
 
 @app.route("/")
@@ -114,62 +114,70 @@ def queries():
 
 @app.route("/task1")
 def task1():
-    start = time.time()
-    n = request.args.get('n')
-    if not n:
-        return message_page("Please input a number to do random query.")
-    place = request.args.get('place')
-    lat, lng, distance = request.args.get('lat'), request.args.get(
-        'lng'), request.args.get('distance')
-    if lat and lng and distance:
-        try:
-            lat = float(lat)
-            lng = float(lng)
-            distance = float(distance)
-        except Exception as e:
-            return message_page("Invalid latitude or longitude, err = {}.".format(e))
-    # time_range = 20200202-20200304
-    time_range = request.args.get('time_range')
-    if time_range:
-        time_range_low, time_range_high = get_range(time_range)
-        time_range_low = datetime.strptime(str(int(time_range_low)), "%Y%m%d")
-        time_range_high = datetime.strptime(str(int(time_range_high)), "%Y%m%d")
-        print('time_range_low = {}, time_range_high = {}'.format(
-            time_range_low, time_range_high))
-
-    mag_range = request.args.get('mag_range')
-    if mag_range:
-        try:
-            mag_range_low, mag_range_high = get_range(mag_range)
-        except Exception as e:
-            return message_page("Invalid magnitude range, err = {}.".format(e))
-
-    if redis_ins.exists(cache_key('task1', n)):
-        db_data = pickle.loads(redis_ins.get(cache_key('task1', n)))
-        msg = "cache hit"
-    else:
-        db_data = select_all(
-            "select * from earthquakes where 1=1 order by rand() limit {}".format(n))
-        redis_ins.set(cache_key('task1', n), pickle.dumps(db_data))
-        redis_ins.expire(cache_key('task1', n), 5)
-        msg = "cache missed"
-
+    n = request.args.get("n")
+    try:
+        n = int(n)
+    except Exception as e:
+        return message_page("n should be a number")
+    names = request.args.get("names")
+    if not n or not names:
+        return message_page("n and names are required")
+    print(n, names)
+    names_arr = names.split(",")
+    print(names_arr)
+    if len(names_arr) != n:
+        return message_page("the length of names is not equals to n")
     data = []
-    for row in db_data:
-        if place and place not in row['place']:
-            continue
-        if lat and lng and distance and get_distance(
-                row['lng'], row['lat'], lng, lat) > distance:
-            continue
-        if time_range and (row['time'] < time_range_low or row['time'] > time_range_high):
-            continue
-        if mag_range and (row['mag'] < mag_range_low or row['mag'] > mag_range_high):
-            continue
-        data.append(row)
+    for name in names_arr:
+        sql = "select count(*) as cnt from quiz4 where col_4 = '{}'".format(name)
+        sql_data = select_one(sql)
+        data.append({
+            'fruit': name,
+            'cnt': sql_data['cnt']
+        })
+    print(data)
+    return results_page(data, None, task_name='task_1')
 
-    msg += ", elapsed time = {}".format(time.time() - start)
 
-    return results_page(data, msg)
+@app.route("/task2")
+def task2():
+    n = request.args.get("n")
+    try:
+        n = int(n)
+    except Exception as e:
+        return message_page("n should be a number")
+    names = request.args.get("names")
+    if not n or not names:
+        return message_page("n and names are required")
+    print(n, names)
+    names_arr = names.split(",")
+    print(names_arr)
+    if len(names_arr) != n:
+        return message_page("the length of names is not equals to n")
+    data = []
+    for name in names_arr:
+        sql = "select count(*) as cnt from quiz4 where col_4 = '{}'".format(name)
+        sql_data = select_one(sql)
+        data.append({
+            'fruit': name,
+            'cnt': sql_data['cnt']
+        })
+    print(data)
+    return results_page(data, None, task_name='task_2')
+
+
+@app.route("/task3")
+def task3():
+    range = request.args.get("range")
+    try:
+        low, high = get_range(range)
+        low, high = int(low), int(high)
+    except Exception as e:
+        return message_page("Failed to parse range, err = {}".format(e))
+    sql = "select * from quiz4 where col_1 >= {} and col_1 <= {}".format(low, high)
+    data = select_all(sql)
+    print(data)
+    return results_page(data, None, task_name='task_3')
 
 
 if __name__ == "__main__":

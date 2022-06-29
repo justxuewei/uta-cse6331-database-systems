@@ -5,18 +5,26 @@
 <p>Name: Xuewei Niu</p>
 
 <div>
-    <p>Task 1 & 2</p>
-    <p>- Cache expired time is 30s</p>
-    <p>- The format of time range is "20220604-20220607"</p>
-    <p>- The format of magnitude range is "0.6-4.6"</p>
-    A number of queries <input type="text" id="query_num"/><br/>
-    Place <input type="text" id="place"/><br/>
-    Latitude <input type="text" id="lat"/><br/>
-    Longitude <input type="text" id="lng"/><br/>
-    Distance <input type="text" id="distance"/><br/>
-    Time Range <input type="text" id="time_range"/><br/>
-    Magnitude Range <input type="text" id="mag_range"/><br/>
-    <button onclick="query()">Query</button>
+    <p>Task 1</p>
+    <p>The format of names is "fruit1,fruit2".</p>
+    N <input type="text" id="task_1_n" /><br />
+    Names <input type="text" id="task_1_names" /><br />
+    <button onclick="task1()">Go!</button>
+</div>
+
+<div>
+    <p>Task 2</p>
+    <p>The format of names is "fruit1,fruit2".</p>
+    N <input type="text" id="task_2_n" /><br />
+    Names <input type="text" id="task_2_names" /><br />
+    <button onclick="task2()">Go!</button>
+</div>
+
+<div>
+    <p>Task 3</p>
+    <p>The format of range is "100-200".</p>
+    Col 1 range <input type="text" id="task_3_range"/><br/>
+    <button onclick="task3()">Go!</button>
 </div>
 
 <div>
@@ -26,41 +34,22 @@
 </div>
 
 <script>
-    function query() {
-        let queries = [];
-        let query_num = document.getElementById("query_num").value;
-        if (query_num !== "") {
-            queries.push("n="+query_num);
-        }
-        let place = document.getElementById("place").value;
-        if (place !== "") {
-            queries.push("place="+place);
-        }
-        let lat = document.getElementById("lat").value;
-        if (lat !== "") {
-            queries.push("lat="+lat);
-        }
-        let lng = document.getElementById("lng").value;
-        if (lng !== "") {
-            queries.push("lng="+lng);
-        }
-        let distance = document.getElementById("distance").value;
-        if (distance !== "") {
-            queries.push("distance="+distance);
-        }
-        let time_range = document.getElementById("time_range").value;
-        if (time_range !== "") {
-            queries.push("time_range="+time_range);
-        }
-        let mag_range = document.getElementById("mag_range").value;
-        if (mag_range !== "") {
-            queries.push("mag_range="+mag_range);
-        }
-
-        let url = "/task1?" + queries.join("&");
-        window.location.href = url;
+    function task1() {
+        let n = document.getElementById("task_1_n").value;
+        let names = document.getElementById("task_1_names").value;
+        window.location.href = "/task1?n=" + n + "&names=" + names
     }
 
+    function task2() {
+        let n = document.getElementById("task_2_n").value;
+        let names = document.getElementById("task_2_names").value;
+        window.location.href = "/task2?n=" + n + "&names=" + names
+    }
+
+    function task3() {
+        let range = document.getElementById("task_3_range").value;
+        window.location.href = "/task3?range="+range
+    }
 </script>
 
 </html>

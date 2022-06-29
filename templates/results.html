@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"
+        integrity="sha512-sW/w8s4RWTdFFSduOTGtk4isV1+190E/GghVffMA9XczdJ2MDzSzLEubKAs5h0wzgSJOQTRYyaz73L3d6RtJSg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
 <p>Student ID: 89800</p>
 <p>Name: Xuewei Niu</p>
 
@@ -8,37 +14,139 @@
 <p>{{ msg }}</p>
 {% endif %}
 
-<table border="1">
-    <tr>
-        <th>latitude</th>
-        <th>longitude</th>
-        <th>depth</th>
-        <th>mag</th>
-        <th>mag_type</th>
-        <th>time</th>
-        <th>net</th>
-        <th>id</th>
-        <th>place</th>
-        <th>horizontal_error</th>
-        <th>mag_nst</th>
-        <th>location_source</th>
-    </tr>
+{% if attachment['task_name'] == 'task_1' %}
+<h1>Task 1</h1>
+<div style="width: 40%; margin: auto">
+    <canvas id="task_1_pie_chart"></canvas>
+</div>
+{% endif %}
+
+{% if attachment['task_name'] == 'task_2' %}
+<h1>Task 2</h1>
+<div style="width: 40%; margin: auto">
+    <canvas id="task_2_bar_chart"></canvas>
+</div>
+{% endif %}
+
+{% if attachment['task_name'] == 'task_3' %}
+<h1>Task 3</h1>
+<div style="width: 40%; margin: auto">
+    <canvas id="task_3_scatter_chart"></canvas>
+</div>
+{% endif %}
+
+<script>
+    let labels = [];
+    let dataset = [];
+
+    {% if attachment['task_name'] == 'task_1' %}
     {% for i in data %}
-    <tr>
-        <td>{{ i['latitude'] }}</td>
-        <td>{{ i['longitude'] }}</td>
-        <td>{{ i['depth'] }}</td>
-        <td>{{ i['mag'] }}</td>
-        <td>{{ i['mag_type'] }}</td>
-        <td>{{ i['time'] }}</td>
-        <td>{{ i['net'] }}</td>
-        <td>{{ i['string_id'] }}</td>
-        <td>{{ i['place'] }}</td>
-        <td>{{ i['horizontal_error'] }}</td>
-        <td>{{ i['mag_nst'] }}</td>
-        <td>{{ i['location_source'] }}</td>
-    </tr>
+    labels.push('{{ i['fruit'] }}')
+    dataset.push({{ i['cnt'] }})
     {% endfor %}
-</table>
+
+    console.log(labels)
+    console.log(dataset)
+
+
+    let task_1_pie_chart_ctx = document.getElementById('task_1_pie_chart').getContext('2d');
+    let task_1_pie_chart = new Chart(task_1_pie_chart_ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: labels,
+                data: dataset,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255,99,132,1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                ],
+                borderWidth: 1
+            }]
+        }
+    });
+    {% endif %}
+
+    {% if attachment['task_name'] == 'task_2' %}
+    let backgroundColor = [];
+    let borderColor = [];
+    {% for i in data %}
+    labels.push('{{ i['fruit'] }}')
+    dataset.push({{ i['cnt'] }})
+    backgroundColor.push('rgba(124,252,0,1)')
+    borderColor.push('rgba(0,128,0,1)')
+    {% endfor %}
+
+    console.log(labels)
+    console.log(dataset)
+
+
+    let task_2_bar_chart_ctx = document.getElementById('task_2_bar_chart').getContext('2d');
+    let task_2_bar_chart = new Chart(task_2_bar_chart_ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'dataset 1',
+                data: dataset,
+                backgroundColor: backgroundColor,
+                borderColor: borderColor,
+                borderWidth: 1
+            }]
+        }
+    });
+    {% endif %}
+
+    {% if attachment['task_name'] == 'task_3' %}
+    {% for i in data %}
+    dataset.push({
+        x: {{ i['col_1'] }},
+        y: {{ i['col_3'] }},
+    })
+    {% endfor %}
+    console.log(dataset)
+
+    let task_3_scatter_chart_ctx = document.getElementById('task_3_scatter_chart').getContext('2d');
+    let task_3_scatter_chart = new Chart(task_3_scatter_chart_ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                borderColor: 'rgba(255,99,132,1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                label: 'task 3',
+                data: dataset
+            }]
+        },
+        options: {
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        text: 'col_1',
+                        display: true,
+                    }
+                },
+                y: {
+                    title: {
+                        text: 'col_3',
+                        display: true,
+                    }
+                }
+            }
+        },
+    })
+    {% endif %}
+</script>
 
 </html>
