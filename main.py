@@ -1,14 +1,12 @@
 from cmath import asin, cos, sin, sqrt
 from datetime import datetime
-from dateutil import parser
-from dis import dis
 import json
 from math import radians
-import random
-import time
-import redis
+import os
 import pymysql
-import pickle
+import spacy
+from string import punctuation
+from spacy.matcher import Matcher
 
 from flask import Flask, render_template, request
 
@@ -22,7 +20,7 @@ db = pymysql.connect(
     database="cloudcomputing"
 )
 
-redis_ins = redis.StrictRedis(host='localhost', port=6379, db=0)
+# redis_ins = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 class MyEncoder(json.JSONEncoder):
@@ -112,60 +110,24 @@ def queries():
     return render_template("queries.html")
 
 
-@app.route("/task1")
-def task1():
-    n = request.args.get("n")
-    try:
-        n = int(n)
-    except Exception as e:
-        return message_page("n should be a number")
-    names = request.args.get("names")
-    if not n or not names:
-        return message_page("n and names are required")
-    print(n, names)
-    names_arr = names.split(",")
-    print(names_arr)
-    if len(names_arr) != n:
-        return message_page("the length of names is not equals to n")
-    data = []
-    for name in names_arr:
-        sql = "select count(*) as cnt from quiz4 where col_4 = '{}'".format(name)
-        sql_data = select_one(sql)
-        data.append({
-            'fruit': name,
-            'cnt': sql_data['cnt']
-        })
-    print(data)
-    return results_page(data, None, task_name='task_1')
+@app.route("/search")
+def search():
+    keyword = request.args.get("keyword")
+    if not keyword:
+        return message_page("Please input a keyword.")
+    nlp = spacy.load("en_core_web_sm")
+    matcher = Matcher(nlp.vocab)
+    matcher.add('KEYWORD', [[{'LOWER': keyword}]])
 
+    for path in os.listdir('static/books'):
+        print("path:", path)
+        with open('static/books/' + path, 'r') as f:
+            text = f.read()
+            doc = nlp(text.lower())
+            matches = matcher(doc)
+            print(matches)
 
-@app.route("/task2")
-def task2():
-    n = request.args.get("n")
-    try:
-        n = int(n)
-    except Exception as e:
-        return message_page("n should be a number")
-    if not n:
-        return message_page("n and names are required")
-    sql = "select count(0) as cnt, col_4 as fruit from quiz4 group by col_4 order by cnt desc limit {}".format(n)
-    data = select_all(sql)  
-    print(data)
-    return results_page(data, None, task_name='task_2')
-
-
-@app.route("/task3")
-def task3():
-    range = request.args.get("range")
-    try:
-        low, high = get_range(range)
-        low, high = int(low), int(high)
-    except Exception as e:
-        return message_page("Failed to parse range, err = {}".format(e))
-    sql = "select * from quiz4 where col_1 >= {} and col_1 <= {}".format(low, high)
-    data = select_all(sql)
-    print(data)
-    return results_page(data, None, task_name='task_3')
+    return message_page("Not implemented yet.")
 
 
 if __name__ == "__main__":

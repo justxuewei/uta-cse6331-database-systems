@@ -5,25 +5,17 @@
 <p>Name: Xuewei Niu</p>
 
 <div>
-    <p>Task 1</p>
-    <p>The format of names is "fruit1,fruit2".</p>
-    N <input type="text" id="task_1_n" /><br />
-    Names <input type="text" id="task_1_names" /><br />
+    <p>Book List:</p>
+    <ul>
+        <li><a href="https://www.gutenberg.org/ebooks/68458">Motley and other
+                poems by Walter De la Mare (pg68458.txt)</a></li>
+        <li><a href="https://www.gutenberg.org/ebooks/68456">The jet jockeys by
+                R. W. Stockheker (pg68456.txt)</a></li>
+        <li><a href="https://www.gutenberg.org/ebooks/68451">Mirrors of Moscow
+                by Louise Stevens Bryant (pg68451.txt)</a></li>
+    </ul>
+    Keyword <input type="text" id="book_keyword" /><br />
     <button onclick="task1()">Go!</button>
-</div>
-
-<div>
-    <p>Task 2</p>
-    <p>The format of names is "fruit1,fruit2".</p>
-    N <input type="text" id="task_2_n" /><br />
-    <button onclick="task2()">Go!</button>
-</div>
-
-<div>
-    <p>Task 3</p>
-    <p>The format of range is "100-200".</p>
-    Col 1 range <input type="text" id="task_3_range"/><br/>
-    <button onclick="task3()">Go!</button>
 </div>
 
 <div>
@@ -34,19 +26,12 @@
 
 <script>
     function task1() {
-        let n = document.getElementById("task_1_n").value;
-        let names = document.getElementById("task_1_names").value;
-        window.location.href = "/task1?n=" + n + "&names=" + names
-    }
-
-    function task2() {
-        let n = document.getElementById("task_2_n").value;
-        window.location.href = "/task2?n=" + n
-    }
-
-    function task3() {
-        let range = document.getElementById("task_3_range").value;
-        window.location.href = "/task3?range="+range
+        let keyword = document.getElementById("book_keyword").value;
+        var url = "/search";
+        if (keyword !== "") {
+            url += "?keyword=" + keyword;
+        }
+        window.location.href = url
     }
 </script>
 
