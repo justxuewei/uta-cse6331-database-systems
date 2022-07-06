@@ -90,7 +90,8 @@
         function join() {
             var name = $("#name").val();
             if (name === "") {
-                name = "xuewei"
+                // name = "xuewei"
+                name = null;
             }
             $.ajax({
                 url: "/game1/join",
@@ -112,7 +113,8 @@
         function doSubmit() {
             var value = $("#game-value").val();
             if (value === "") {
-                value = "2"
+                // value = "2"
+                value = null;
             }
 
             $.ajax({

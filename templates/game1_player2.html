@@ -89,7 +89,8 @@
         function join() {
             var name = $("#name").val();
             if (name === "") {
-                name = "keyu"
+                // name = "keyu"
+                name = null;
             }
             $.ajax({
                 url: "/game1/join",
@@ -111,7 +112,8 @@
         function doSubmit() {
             var value = $("#game-value").val();
             if (value === "") {
-                value = "2"
+                // value = "2"
+                value = null;
             }
 
             $.ajax({

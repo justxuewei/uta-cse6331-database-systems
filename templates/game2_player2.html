@@ -87,10 +87,11 @@
     function doSubmit() {
         let value = $('#game-value').val();
         if (value === "") {
-            value = `The extension to this game is the "use words in a paragraph as many times as possible". It is played by the Adm giving
-      the player from one to 6 words, and the player tries to make as long a paragraph (as many words as possible) in the time limit
-      using those words (and other words also.)
-                `
+    //         value = `The extension to this game is the "use words in a paragraph as many times as possible". It is played by the Adm giving
+    //   the player from one to 6 words, and the player tries to make as long a paragraph (as many words as possible) in the time limit
+    //   using those words (and other words also.)
+    //             `
+            value = null;
         }
 
         $.ajax({

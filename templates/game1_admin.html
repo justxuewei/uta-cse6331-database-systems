@@ -112,19 +112,24 @@
             var player_value = $("#player").val();
 
             if (min_value === "") {
-                min_value = "2"
+                // min_value = "2"
+                min_value = null;
             }
             if (max_value === "") {
-                max_value = "4"
+                // max_value = "4"
+                max_value = null;
             }
             if (start_value === "") {
-                start_value = "10"
+                // start_value = "10"
+                start_value = null;
             }
             if (duration_value === "") {
-                duration_value = "60"
+                // duration_value = "60";
+                duration_value = null;
             }
             if (player_value === "") {
-                player_value = "1"
+                // player_value = "1";
+                player_value = null;
             }
 
             $.ajax({

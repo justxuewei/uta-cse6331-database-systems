@@ -58,12 +58,12 @@ def game2_update_result():
             game2_result = "player1 and player2 have the same length of paragraph."
         else:
             game2_result = 'player1 win! Cuz the length of player1\'s paragraph is longer than player2\'s.'
-    elif not game2_player1_paragraph:
-        game2_result = "player2 win! Cuz player1 didn't submit a paragraph."
+    elif not game2_player2_paragraph and not game2_player1_paragraph:
+        game2_result = "player1 and player2 didn't submit a paragraph."
     elif not game2_player2_paragraph:
         game2_result = "player1 win! Cuz player2 didn't submit a paragraph."
     else:
-        game2_result = "player1 and player2 didn't submit a paragraph."
+        game2_result = "player2 win! Cuz player1 didn't submit a paragraph."
 
 ###### Pages ######
 
@@ -389,7 +389,7 @@ def api_game2_start():
 
 
 # role: admin
-@app.route("/game2/stop")
+@app.route("/game2/close")
 def api_game2_stop():
     role = request.args.get("role")
     if not role or role != "admin":
@@ -398,10 +398,7 @@ def api_game2_stop():
         }), 500
     global game2_status, game2_closed_time, game2_words, game2_player1_paragraph, game2_player2_paragraph, game2_result
     game2_status = "Closed"
-    game2_player1_paragraph = None
-    game2_player2_paragraph = None
-    game2_result = None
-    game2_words = None
+    game2_update_result()
     return jsonify({
         'msg': 'success',
     })

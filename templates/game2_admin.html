@@ -94,10 +94,12 @@ Dashboard
         var words = $('#game-words').val();
         var duration = $('#game-duration').val();
         if (words === "") {
-            words = "is,as"
+            // words = "is,as"
+            words = null;
         }
         if (duration === "") {
-            duration = "60"
+            // duration = "60"
+            duration = null;
         }
         $.ajax({
             url: '/game2/start',
