@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, jsonify
@@ -16,6 +17,13 @@ game1_current_player = None
 game1_min = None
 game1_max = None
 game1_remaining = None
+
+game2_status = "Closed"
+game2_closed_time = datetime.now()
+game2_player1_paragraph = None
+game2_player2_paragraph = None
+game2_words = None
+game2_result = None
 
 
 ###### Utils ######
@@ -39,6 +47,24 @@ def queries():
     return render_template("queries.html")
 
 
+def game2_update_result():
+    global game2_result, game2_player1_paragraph, game2_player2_paragraph
+    if game2_result:
+        return
+    if game2_player1_paragraph and game2_player2_paragraph:
+        if len(game2_player1_paragraph) < len(game2_player2_paragraph):
+            game2_result = 'player2 win! Cuz the length of player1\'s paragraph is shorter than player2\'s.'
+        elif len(game2_player1_paragraph) == len(game2_player2_paragraph):
+            game2_result = "player1 and player2 have the same length of paragraph."
+        else:
+            game2_result = 'player1 win! Cuz the length of player1\'s paragraph is longer than player2\'s.'
+    elif not game2_player1_paragraph:
+        game2_result = "player2 win! Cuz player1 didn't submit a paragraph."
+    elif not game2_player2_paragraph:
+        game2_result = "player1 win! Cuz player2 didn't submit a paragraph."
+    else:
+        game2_result = "player1 and player2 didn't submit a paragraph."
+
 ###### Pages ######
 
 
@@ -55,6 +81,21 @@ def page_game1_player1():
 @app.route("/game1/player2")
 def page_game1_player2():
     return render_template("game1_player2.html")
+
+
+@app.route("/game2/admin")
+def page_game2_admin():
+    return render_template("game2_admin.html")
+
+
+@app.route("/game2/player1")
+def page_game2_player1():
+    return render_template("game2_player1.html")
+
+
+@app.route("/game2/player2")
+def page_game2_player2():
+    return render_template("game2_player2.html")
 
 ###### APIs ######
 
@@ -281,6 +322,137 @@ def api_game1_player_submit():
             'remaining': result,
             'msg': 'continue',
         })
+
+# role: public
+
+
+@app.route("/game2/dashboard")
+def api_game2_dashboard():
+    global game2_closed_time, game2_status, game2_player1_paragraph, game2_player2_paragraph, game2_result, game2_words
+    remaining_time = datetime.timestamp(
+        game2_closed_time) - datetime.timestamp(datetime.now())
+    if remaining_time <= 0:
+        if game2_status == "Started":
+            game2_status = "Closed"
+            game2_update_result()
+        remaining_time = 0
+    if game2_status != "Started":
+        remaining_time = 0
+    words = game2_words
+    if words:
+        words = ",".join(words)
+    return jsonify({
+        "status": game2_status,
+        "remaining_time": remaining_time,
+        "player1_paragraph": game2_player1_paragraph,
+        "player2_paragraph": game2_player2_paragraph,
+        "result": game2_result,
+        "words": words,
+    })
+
+
+# role: admin
+@app.route("/game2/start")
+def api_game2_start():
+    role = request.args.get("role")
+    if not role or role != "admin":
+        return jsonify({
+            "msg": "you don't have permission to prestart the game",
+        }), 500
+    global game2_status, game2_closed_time, game2_words, game2_player1_paragraph, game2_player2_paragraph, game2_result
+    if game2_status != "Closed":
+        return jsonify({
+            'msg': 'the game is not in closed status'
+        }), 500
+    words_str = request.args.get("words")
+    words = words_str.split(",")
+    if len(words) < 1 or len(words) > 6:
+        return jsonify({
+            'msg': 'The length of words should be between 1 and 6',
+        }), 500
+    duration = request.args.get('duration')
+    try:
+        duration = int(duration)
+    except Exception as e:
+        return jsonify({
+            'msg': 'The duration should be an integer',
+        }), 500
+    game2_status = "Started"
+    game2_closed_time = datetime.now() + timedelta(seconds=duration)
+    game2_words = words
+    game2_player1_paragraph = None
+    game2_player2_paragraph = None
+    game2_result = None
+    return jsonify({
+        'msg': 'success',
+    })
+
+
+# role: admin
+@app.route("/game2/stop")
+def api_game2_stop():
+    role = request.args.get("role")
+    if not role or role != "admin":
+        return jsonify({
+            "msg": "you don't have permission to prestart the game",
+        }), 500
+    global game2_status, game2_closed_time, game2_words, game2_player1_paragraph, game2_player2_paragraph, game2_result
+    game2_status = "Closed"
+    game2_player1_paragraph = None
+    game2_player2_paragraph = None
+    game2_result = None
+    game2_words = None
+    return jsonify({
+        'msg': 'success',
+    })
+
+
+# role: player
+@app.route("/game2/submit")
+def api_game2_submit():
+    role = request.args.get("role")
+    if not role or (role != "player1" and role != "player2"):
+        return jsonify({
+            "msg": "you don't have permission to submit a result",
+        }), 500
+    global game2_status, game2_player1_paragraph, game2_player2_paragraph, game2_result, game2_words
+    if game2_status != 'Started':
+        return jsonify({
+            'msg': 'The game is not started',
+        }), 500
+    paragraph = request.args.get("value")
+    if not paragraph:
+        return jsonify({
+            'msg': 'paragraph is required'
+        }), 500
+    for word in game2_words:
+        print('Started to check "{}"'.format(word))
+        if not re.compile(r'\b({0})\b'.format(word), flags=re.IGNORECASE).search(paragraph):
+            return jsonify({
+                'msg': 'The word "{}" is not in the paragraph'.format(word),
+            }), 500
+    if role == 'player1':
+        if game2_player1_paragraph:
+            return jsonify({
+                'msg': 'you have submitted a result',
+            }), 500
+        game2_player1_paragraph = paragraph
+    else:
+        if game2_player2_paragraph:
+            return jsonify({
+                'msg': 'you have submitted a result',
+            }), 500
+        game2_player2_paragraph = paragraph
+
+    # update result
+    if game2_player1_paragraph and game2_player2_paragraph:
+        game2_update_result()
+        if game2_result:
+            game2_status = "Closed"
+
+    return jsonify({
+        'msg': 'success',
+    })
 
 
 if __name__ == "__main__":
