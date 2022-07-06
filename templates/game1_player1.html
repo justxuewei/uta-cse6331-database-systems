@@ -1,0 +1,171 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        var status = "Closed";
+        let role = "player1";
+
+        $(document).ready(function () {
+            setTimeout(updateDashboard, 1000);
+        })
+
+        function updateDashboard() {
+            updateStatus();
+            updatePlayers();
+            updateCurrentPlayer();
+            setTimeout(updateDashboard, 1000);
+        }
+
+        function updateStatus() {
+            $.ajax({
+                url: "/game1/status",
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    if (status === "Started" && Math.trunc(data.remaining_time) <= 0) {
+                        status = "Closed";
+                        alert("Timer is fired, the game was closed");
+                    }
+                    $("#game-status").text(data.status);
+                    $("#game-remaining-time").text(Math.trunc(data.remaining_time) + " s");
+                    status = data.status;
+                    if (data.min === null) {
+                        $("#game-min").text("null");
+                    } else {
+                        $("#game-min").text(data.min);
+                    }
+                    if (data.max === null) {
+                        $("#game-max").text("null");
+                    } else {
+                        $("#game-max").text(data.max);
+                    }
+                    if (data.remaining === null) {
+                        $("#game-remaining").text("null");
+                    } else {
+                        $("#game-remaining").text(data.remaining);
+                    }
+                }
+            });
+        }
+
+        function updatePlayers() {
+            $.ajax({
+                url: "/game1/players",
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    if (data.player1 === null) {
+                        $("#player1").text("null");
+                    } else {
+                        $("#player1").text(data.player1);
+                    }
+
+                    if (data.player2 === null) {
+                        $("#player2").text("null");
+                    } else {
+                        $("#player2").text(data.player2);
+                    }
+                }
+            });
+        }
+
+        function updateCurrentPlayer() {
+            $.ajax({
+                url: '/game1/current_player',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.current_player === null) {
+                        $("#current-player").text("null");
+                    } else {
+                        $("#current-player").text(data.current_player);
+                    }
+                }
+            })
+        }
+
+        function join() {
+            var name = $("#name").val();
+            if (name === "") {
+                name = "xuewei"
+            }
+            $.ajax({
+                url: "/game1/join",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    "role": role,
+                    "name": name,
+                },
+                success: function (data) {
+                    console.log("join successfully.")
+                },
+                error: function (err) {
+                    alert("Failed to join the game, err = " + err.responseJSON.msg)
+                }
+            });
+        }
+
+        function doSubmit() {
+            var value = $("#game-value").val();
+            if (value === "") {
+                value = "2"
+            }
+
+            $.ajax({
+                url: "/game1/player_submit",
+                type: "GET",
+                dataType: "json",
+                data: {
+                    "role": role,
+                    "value": value,
+                },
+                success: function (data) {
+                    if (data.remaining === 0) {
+                        alert(data.msg)
+                    }
+                },
+                error: function (err) {
+                    alert("Failed to submit your value, err = " + err.responseJSON.msg)
+                }
+            });
+        }
+    </script>
+</head>
+
+<h1>Game 1 Player 1 Page</h1>
+
+Dashboard
+
+<ul>
+    <li>Status: <span id="game-status"></span></li>
+    <li>Remaining time: <span id="game-remaining-time"></span></li>
+    <li>Player 1: <span id="player1"></span></li>
+    <li>Player 2: <span id="player2"></span></li>
+    <li>Current player: <span id="current-player"></span></li>
+    <li>Min: <span id="game-min"></span></li>
+    <li>Max: <span id="game-max"></span></li>
+    <li>Remaining: <span id="game-remaining"></span></li>
+</ul>
+
+<hr />
+
+<div>
+    <p>You can perform the following action when the game status is "Waiting".</p>
+    Name <input type="text" id="name" /><br />
+    <button onclick="join()">Join</button>
+</div>
+
+<hr />
+
+<div>
+    <p>You can perform the following actions when the game status is
+        "Started".</p>
+    Value <input type="text" id="game-value" /><br />
+    <button onclick="doSubmit()">Submit</button>
+</div>
+
+</html>
