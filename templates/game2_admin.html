@@ -31,7 +31,7 @@ Dashboard
 <div>
     <p>You can perform the following action when the game status is
         "Closed".</p>
-    Words <input type="text" id="game-words" /> Please split the words by
+    Words <input type="text" id="game-words-input" /> Please split the words by
     comma.<br />
     Duration <input type="text" id="game-duration" /><br />
     <button onclick="doStart()">Start</button>
@@ -91,7 +91,7 @@ Dashboard
 
 <script>
     function doStart() {
-        var words = $('#game-words').val();
+        var words = $('#game-words-input').val();
         var duration = $('#game-duration').val();
         if (words === "") {
             // words = "is,as"

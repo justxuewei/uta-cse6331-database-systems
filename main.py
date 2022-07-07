@@ -48,22 +48,34 @@ def queries():
 
 
 def game2_update_result():
-    global game2_result, game2_player1_paragraph, game2_player2_paragraph
+    global game2_result, game2_words, game2_player1_paragraph, game2_player2_paragraph
     if game2_result:
         return
-    if game2_player1_paragraph and game2_player2_paragraph:
-        if len(game2_player1_paragraph) < len(game2_player2_paragraph):
-            game2_result = 'player2 win! Cuz the length of player1\'s paragraph is shorter than player2\'s.'
-        elif len(game2_player1_paragraph) == len(game2_player2_paragraph):
-            game2_result = "player1 and player2 have the same length of paragraph."
-        else:
-            game2_result = 'player1 win! Cuz the length of player1\'s paragraph is longer than player2\'s.'
-    elif not game2_player2_paragraph and not game2_player1_paragraph:
-        game2_result = "player1 and player2 didn't submit a paragraph."
-    elif not game2_player2_paragraph:
-        game2_result = "player1 win! Cuz player2 didn't submit a paragraph."
+    player1_result = []
+    player2_result = []
+    player1_hit_times = 0
+    player2_hit_times = 0
+    if game2_player1_paragraph:
+        for word in game2_words:
+            times = len(re.compile(r'\b({0})\b'.format(word), flags=re.IGNORECASE).findall(game2_player1_paragraph))
+            player1_result.append("\"{}\" {} times".format(word, times))
+            player1_hit_times += times
+
+    if game2_player2_paragraph:
+        for word in game2_words:
+            times = len(re.compile(r'\b({0})\b'.format(word), flags=re.IGNORECASE).findall(game2_player2_paragraph))
+            player2_result.append("\"{}\" {} times".format(word, times))
+            player2_hit_times += times
+
+    if player1_hit_times > player2_hit_times:
+        game2_result = "Player 1 wins; "
+    elif player1_hit_times < player2_hit_times:
+        game2_result = "Player 2 wins; "
     else:
-        game2_result = "player2 win! Cuz player1 didn't submit a paragraph."
+        game2_result = "No winner; "
+    
+    game2_result += "player1: {}; player2: {}".format(", ".join(player1_result), ", ".join(player2_result))
+
 
 ###### Pages ######
 
@@ -192,6 +204,14 @@ def api_game1_start():
     print("min_value = {}, max_value = {}, start_value = {}, duration_value = {}".format(
         min_value, max_value, start_value, duration_value))
     global game1_player1, game1_player2, game1_status, game1_closed_time, game1_current_player, game1_min, game1_max, game1_remaining
+    if min_value <= 0 or max_value <= 0 or start_value <= 0 or duration_value <= 0:
+        return jsonify({
+            "msg": "parameters should greater than zero",
+        }), 500
+    if min_value > max_value:
+        return jsonify({
+            "msg": "min should less than max",
+        }), 500
     if not game1_player1 or not game1_player2:
         return jsonify({
             "msg": "players are not ready",
@@ -365,6 +385,7 @@ def api_game2_start():
             'msg': 'the game is not in closed status'
         }), 500
     words_str = request.args.get("words")
+    print(words_str)
     words = words_str.split(",")
     if len(words) < 1 or len(words) > 6:
         return jsonify({
@@ -380,6 +401,7 @@ def api_game2_start():
     game2_status = "Started"
     game2_closed_time = datetime.now() + timedelta(seconds=duration)
     game2_words = words
+    print(game2_words)
     game2_player1_paragraph = None
     game2_player2_paragraph = None
     game2_result = None
