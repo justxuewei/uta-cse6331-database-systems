@@ -1,0 +1,115 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <h1>Game 2 Player 2 Page</h1>
+
+    <div>
+        <p>Student ID: 89800</p>
+        <p>Name: Xuewei Niu</p>
+    </div>
+    
+    <hr />
+
+    Dashboard
+
+    <ul>
+        <li>Status: <span id="game-status"></span></li>
+        <li>Remaining time: <span id="game-remaining-time"></span></li>
+        <li>Words: <span id="game-words"></span></li>
+        <li>Player 1 paragraph: <span id="game-player1-paragraph"></span></li>
+        <li>Player 2 paragraph: <span id="game-player2-paragraph"></span></li>
+        <li>Result: <span id="game-result"></span></li>
+    </ul>
+
+    <hr />
+
+    <div>
+        <p>You can perform the following actions when the game status is
+            "Started".</p>
+        Value <input type="text" id="game-value" /><br />
+        <button onclick="doSubmit()">Submit</button>
+    </div>
+</body>
+
+<script>
+    let role = "player2";
+    var status = "Closed"
+
+    $(document).ready(function () {
+        setTimeout(updateDashboard, 1000);
+    })
+
+    function updateDashboard() {
+        $.ajax({
+            url: '/game2/dashboard',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#game-status').text(data.status);
+                $('#game-remaining-time').text(Math.trunc(data.remaining_time) + ' s');
+                let words = data.words;
+                if (words === null) {
+                    words = "null"
+                }
+                let player1Paragraph = data.player1_paragraph;
+                if (player1Paragraph === null) {
+                    player1Paragraph = "null"
+                }
+                let player2Paragraph = data.player2_paragraph;
+                if (player2Paragraph === null) {
+                    player2Paragraph = "null"
+                }
+                let result = data.result;
+                if (result === null) {
+                    result = "null"
+                }
+                $('#game-words').text(words);
+                $('#game-player1-paragraph').text(player1Paragraph);
+                $('#game-player2-paragraph').text(player2Paragraph);
+                $('#game-result').text(result);
+                status = data.status;
+            },
+            error: function (err) {
+                alert("Failed to update dashboard, err = " + err.responseJSON.msg)
+            }
+        })
+        setTimeout(updateDashboard, 1000);
+    }
+</script>
+
+<script>
+    function doSubmit() {
+        let value = $('#game-value').val();
+        if (value === "") {
+    //         value = `The extension to this game is the "use words in a paragraph as many times as possible". It is played by the Adm giving
+    //   the player from one to 6 words, and the player tries to make as long a paragraph (as many words as possible) in the time limit
+    //   using those words (and other words also.)
+    //             `
+            value = null;
+        }
+
+        $.ajax({
+            url: '/game2/submit',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                role: role,
+                value: value
+            },
+            success: function (data) {
+                console.log('Successfully submitted value: ' + value);
+            },
+            error: function (err) {
+                alert("Failed to submit, err = " + err.responseJSON.msg)
+            }
+        })
+    }
+</script>
+
+</html>

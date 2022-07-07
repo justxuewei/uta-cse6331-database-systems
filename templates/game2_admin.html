@@ -1,0 +1,140 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<h1>Game 2 Admin Page</h1>
+
+<div>
+    <p>Student ID: 89800</p>
+    <p>Name: Xuewei Niu</p>
+</div>
+
+<hr />
+
+Dashboard
+
+<ul>
+    <li>Status: <span id="game-status"></span></li>
+    <li>Remaining time: <span id="game-remaining-time"></span></li>
+    <li>Words: <span id="game-words"></span></li>
+    <li>Player 1 paragraph: <span id="game-player1-paragraph"></span></li>
+    <li>Player 2 paragraph: <span id="game-player2-paragraph"></span></li>
+    <li>Result: <span id="game-result"></span></li>
+</ul>
+
+<hr />
+
+<div>
+    <p>You can perform the following action when the game status is
+        "Closed".</p>
+    Words <input type="text" id="game-words-input" /> Please split the words by
+    comma.<br />
+    Duration <input type="text" id="game-duration" /><br />
+    <button onclick="doStart()">Start</button>
+</div>
+
+<hr />
+
+<div>
+    <button onclick="doClose()">Close</button>
+</div>
+
+<script>
+    let role = "admin";
+    var status = "Closed"
+
+    $(document).ready(function () {
+        setTimeout(updateDashboard, 1000);
+    })
+
+    function updateDashboard() {
+        $.ajax({
+            url: '/game2/dashboard',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#game-status').text(data.status);
+                $('#game-remaining-time').text(Math.trunc(data.remaining_time) + ' s');
+                let words = data.words;
+                if (words === null) {
+                    words = "null"
+                }
+                let player1Paragraph = data.player1_paragraph;
+                if (player1Paragraph === null) {
+                    player1Paragraph = "null"
+                }
+                let player2Paragraph = data.player2_paragraph;
+                if (player2Paragraph === null) {
+                    player2Paragraph = "null"
+                }
+                let result = data.result;
+                if (result === null) {
+                    result = "null"
+                }
+                $('#game-words').text(words);
+                $('#game-player1-paragraph').text(player1Paragraph);
+                $('#game-player2-paragraph').text(player2Paragraph);
+                $('#game-result').text(result);
+                status = data.status;
+            },
+            error: function (err) {
+                alert("Failed to update dashboard, err = " + err.responseJSON.msg)
+            }
+        })
+        setTimeout(updateDashboard, 1000);
+    }
+</script>
+
+<script>
+    function doStart() {
+        var words = $('#game-words-input').val();
+        var duration = $('#game-duration').val();
+        if (words === "") {
+            // words = "is,as"
+            words = null;
+        }
+        if (duration === "") {
+            // duration = "60"
+            duration = null;
+        }
+        $.ajax({
+            url: '/game2/start',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                'role': role,
+                'words': words,
+                'duration': duration,
+            },
+            success: function (data) {
+                console.log("Successfully start game 2");
+            },
+            error: function (err) {
+                alert("Failed to start game 2, err = " + err.responseJSON.msg)
+            }
+        })
+    }
+
+    function doClose() {
+        $.ajax({
+            url: '/game2/close',
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                'role': role,
+            },
+            success: function (data) {
+                console.log("Successfully close game 2");
+            },
+            error: function (err) {
+                alert("Failed to close game 2, err = " + err.responseJSON.msg)
+            }
+        })
+    }
+</script>
+
+</html>
